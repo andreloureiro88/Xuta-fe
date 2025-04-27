@@ -1,0 +1,106 @@
+/* Importing colors */
+
+@use "./colors" as *;
+
+/* Importing Buleten font from CDNFonts */
+@import url("https://fonts.cdnfonts.com/css/bulletin");
+
+/* Importing Roboto and Open Sans fonts from Google Fonts */
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Open+Sans:wght@400;600&display=swap");
+
+@import url("https://fonts.googleapis.com/css2?family=Cascadia+Mono:ital,wght@0,200..700;1,200..700&display=swap");
+
+@import url("tailwindcss");
+
+/* Applying fonts to elements */
+body {
+  background-color: $deep-navy;
+  font-family: "Open Sans", sans-serif;
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Buleten", sans-serif;
+    color: $soft-lavender;
+  }
+
+  button {
+    cursor: pointer;
+    font-family: "Roboto", sans-serif;
+  }
+
+  span {
+    font-family: "Roboto", sans-serif;
+  }
+
+  .code {
+    font-family: "Cascadia Mono", monospace;
+  }
+}
+
+.text-light-green {
+  color: $light-green;
+}
+
+.text-vibrant-purple {
+  color: $vibrant-purple;
+}
+
+.text-soft-lavender {
+  color: $soft-lavender;
+}
+
+.text-deep-navy {
+  color: $deep-navy;
+}
+
+.bg-soft-lavender {
+  background-color: $soft-lavender;
+}
+
+.bg-deep-navy {
+  background-color: $deep-navy;
+}
+
+.bg-dark-green {
+  background-color: $dark-green;
+}
+
+.border-vibrant-purple {
+  border-color: $vibrant-purple;
+}
+
+.border-soft-lavender {
+  border-color: $soft-lavender;
+}
+
+.border-deep-navy {
+  border-color: $deep-navy;
+}
+
+:root {
+  --wood-light: #d2b48c;
+  --wood-dark: #b38b6d;
+  --metal: #aaa;
+  --red: #d8232a;
+  --white: #fff;
+  --shadow: rgba(0, 0, 0, 0.15);
+  --light-green: #2cff05;
+}
+
+.sections-container > div {
+  padding: 1rem 1.5rem;
+  color: white;
+  width: fit-content;
+  border-radius: 0.5rem;
+}
+.sections-container > div:nth-child(odd) {
+  align-self: flex-start;
+  background-color: $light-green; /* vibrant purple */
+}
+.sections-container > div:nth-child(even) {
+  align-self: flex-end;
+  background-color: $soft-lavender; /* soft lavender */
+}
