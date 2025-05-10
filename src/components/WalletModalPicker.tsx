@@ -3,9 +3,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import React, { useState } from "react";
 import AnimatedButton from "./AnimatedButton";
 
-const WalletModalPicker: React.FC<{
-  onConnect: (walletName: WalletName | null) => void;
-}> = ({ onConnect }) => {
+const WalletModalPicker: React.FC<{}> = () => {
   const [isOpen, setIsOpen] = useState(false);
   const {
     wallets,
@@ -22,23 +20,24 @@ const WalletModalPicker: React.FC<{
   const handleSelectWallet = async (walletName: WalletName) => {
     try {
       select(walletName);
+
       await connect()?.then(() => {
         setIsOpen(false);
       });
     } catch (error) {
+      console.log(error);
       console.error("Error connecting to wallet:", error);
     }
   };
 
   const handleDisconnect = async () => {
     await disconnect().then(() => {
-      onConnect(null);
       setIsOpen(false);
     });
   };
 
   return (
-    <div>
+    <div className="">
       {connected && (
         <div className="flex flex-col gap-2">
           <AnimatedButton
@@ -112,7 +111,7 @@ const WalletModalPicker: React.FC<{
                   <li key={wallet.adapter.name}>
                     <button
                       className="relative flex items-center gap-4 p-1 rounded-md overflow-hidden transition-all  group w-full"
-                      onClick={() => handleSelectWallet(wallet.adapter.name)}
+                      onClick={() => handleSelectWallet(wallet?.adapter?.name)}
                       disabled={connecting}
                     >
                       <span className="absolute top-0 left-0 w-0 h-full bg-soft-lavender transition-all duration-300 ease-out group-hover:w-full -z-10"></span>

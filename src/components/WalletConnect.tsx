@@ -27,8 +27,7 @@ import WalletModalPicker from "./WalletModalPicker";
 
 const WalletConnect: React.FC<{
   children: React.ReactNode;
-  onWalletConnect: (walletName: WalletName) => void;
-}> = ({ onWalletConnect, children }) => {
+}> = ({ children }) => {
   const [selectedWallet, setSelectedWallet] = useState<WalletName | null>(null);
   const network = "devnet";
   const endpoint = useMemo(() => clusterApiUrl(network), [network]);
