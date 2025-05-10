@@ -154,7 +154,7 @@ export const Campaigns: React.FC = () => {
                 alt="Selected campaign image"
                 width={100}
                 height={100}
-                className="w-full h-full object-cover"
+                className="w-32 h-32 object-cover"
               />
             )}
             <div className="flex gap-2">
@@ -186,7 +186,6 @@ export const Campaigns: React.FC = () => {
               <div className="mt-2">
                 {selectedFile && (
                   <div className="flex items-center gap-2">
-                    <div className="relative w-32 h-32 border-2 border-soft-lavender rounded-md overflow-hidden"></div>
                     <button
                       onClick={handleUpload}
                       className="px-4 py-2 bg-vibrant-purple hover:bg-soft-lavender text-white font-semibold rounded-md transition-colors"
