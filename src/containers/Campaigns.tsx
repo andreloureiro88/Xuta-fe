@@ -7,14 +7,20 @@ import {
   XutaService,
 } from "../services/XutaService";
 import WalletModalPicker from "../components/WalletModalPicker";
-
+import AnimatedButton from "../components/AnimatedButton";
+import UploadService from "../services/UploadService";
 export const Campaigns: React.FC = () => {
   const wallet = useWallet();
   const [service, setService] = useState<XutaService | null>(null);
+  const [uploadService, setUploadService] = useState<UploadService | null>(
+    null
+  );
   const [campaigns, setCampaigns] = useState<
     { publicKey: PublicKey; account: any }[]
   >([]);
+  const [fileID, setFileID] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
 
   // Initialize service once wallet is ready
@@ -23,6 +29,7 @@ export const Campaigns: React.FC = () => {
       const provider = createXutaProvider(wallet);
       const program = getXutaProgram(provider);
       setService(new XutaService(program));
+      setUploadService(new UploadService());
     }
   }, [wallet]);
 
@@ -105,6 +112,21 @@ export const Campaigns: React.FC = () => {
     setStatusMsg("Contract submitted!");
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!uploadService || !selectedFile) return;
+    setStatusMsg("Uploading image...");
+    const res = await uploadService.uploadFile(selectedFile);
+    setFileID(res.fileId);
+    setStatusMsg("Image uploaded!");
+  };
+
   return (
     <div className="p-5 font-sans bg-deep-navy text-white">
       <header className="bg-[var(--vibrant-purple)]">
@@ -126,6 +148,15 @@ export const Campaigns: React.FC = () => {
             <h3 className="text-xl font-semibold mb-3 text-vibrant-purple">
               Start New Campaign
             </h3>
+            {fileID && (
+              <img
+                src={`https://drive.google.com/thumbnail?id=${fileID}`}
+                alt="Selected campaign image"
+                width={100}
+                height={100}
+                className="w-full h-full object-cover"
+              />
+            )}
             <div className="flex gap-2">
               <input
                 type="text"
@@ -134,6 +165,37 @@ export const Campaigns: React.FC = () => {
                 onChange={(e) => setNewName(e.target.value)}
                 className="px-3 py-2 bg-deep-navy border-2 border-soft-lavender rounded-md focus:outline-none focus:ring-2 focus:ring-vibrant-purple"
               />
+
+              <AnimatedButton
+                text="Upload Image"
+                trigger={() => {
+                  const fileInput = document.getElementById(
+                    "file-input"
+                  ) as HTMLInputElement;
+                  fileInput.click();
+                }}
+              ></AnimatedButton>
+              <input
+                id="file-input"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+
+              <div className="mt-2">
+                {selectedFile && (
+                  <div className="flex items-center gap-2">
+                    <div className="relative w-32 h-32 border-2 border-soft-lavender rounded-md overflow-hidden"></div>
+                    <button
+                      onClick={handleUpload}
+                      className="px-4 py-2 bg-vibrant-purple hover:bg-soft-lavender text-white font-semibold rounded-md transition-colors"
+                    >
+                      Upload
+                    </button>
+                  </div>
+                )}
+              </div>
               <button
                 onClick={handleStart}
                 disabled={!newName}
