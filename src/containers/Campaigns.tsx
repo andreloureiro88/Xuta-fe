@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { PublicKey, SystemProgram } from "@solana/web3.js";
-import {
-  createXutaProvider,
-  getXutaProgram,
-  XutaService,
-} from "../services/XutaService";
+import { AnchorWallet, useWallet } from "@solana/wallet-adapter-react";
+import { PublicKey, SystemProgram, Connection } from "@solana/web3.js";
+import { XutaService } from "../services/XutaService";
 import WalletModalPicker from "../components/WalletModalPicker";
 import AnimatedButton from "../components/AnimatedButton";
 import UploadService from "../services/UploadService";
+import { AnchorProvider } from "@coral-xyz/anchor";
 export const Campaigns: React.FC = () => {
   const wallet = useWallet();
   const [service, setService] = useState<XutaService | null>(null);
@@ -26,23 +23,65 @@ export const Campaigns: React.FC = () => {
   // Initialize service once wallet is ready
   useEffect(() => {
     if (wallet.publicKey && wallet.signTransaction) {
-      const provider = createXutaProvider(wallet);
-      const program = getXutaProgram(provider);
-      setService(new XutaService(program));
+      // later replace with user connection
+      const connection = new Connection("http://localhost:8899", "confirmed");
+
+      const provider = new AnchorProvider(connection, wallet as AnchorWallet, {
+        commitment: "confirmed",
+      });
+
+      const xutaService = new XutaService(provider);
+      console.log("xutaService", xutaService);
+      setService(xutaService);
+
       setUploadService(new UploadService());
     }
   }, [wallet]);
 
   // Fetch all campaigns
   const loadCampaigns = async () => {
+    console.log("Loading campaigns...");
     if (!service) return;
-    const all = await service.getXutaCampaigns(service["program"]);
+    const all = await service.getAllCampaigns();
+    console.log(all);
+    const institutions = await service.getInstituttions();
+    console.log("ins", institutions);
+
     setCampaigns(all);
   };
 
   useEffect(() => {
     if (service) loadCampaigns();
   }, [service]);
+
+  const handleCreateCampaign = async () => {
+    if (!service || !newName) return;
+    setStatusMsg("Creating campaign...");
+    await service.createCampaign(
+      newName,
+      "contract2", // creator
+      "image", // authority
+      0.5, // ratio
+      1, // targetAmount
+      1715611200, // initialDate
+      1715611200, // dueDate
+      "institution"
+    );
+    setStatusMsg("Campaign created!");
+    await loadCampaigns();
+  };
+
+  const handleInitInstitution = async () => {
+    if (!service) return;
+    setStatusMsg("Initializing institution...");
+    await service.initInstitution(
+      "institution2233",
+      "contrac2444t",
+      new PublicKey("G98ibAo8eHdsKN8Bw43Gw8f1fvvYf8gN75AuohvaNf2A")
+    );
+    setStatusMsg("Institution initialized!");
+    await loadCampaigns();
+  };
 
   const handleStart = async () => {
     if (!service || !newName) return;
@@ -54,62 +93,32 @@ export const Campaigns: React.FC = () => {
 
   const handleBuy = async () => {
     if (!service) return;
-    setStatusMsg("Buying token...");
-    await service.buyToken();
-    setStatusMsg("Token bought!");
   };
 
-  const handleClaim = async () => {
-    if (!service) return;
-    setStatusMsg("Claiming earnings...");
-    await service.claimEarnings();
-    setStatusMsg("Earnings claimed!");
-  };
+  const handleClaim = async () => {};
 
   const handlePause = async (pk: PublicKey) => {
     if (!service) return;
-    setStatusMsg("Pausing campaign...");
-    await service.pauseCampaign(pk);
-    setStatusMsg("Campaign paused!");
-    await loadCampaigns();
   };
 
   const handleFinish = async (pk: PublicKey) => {
     if (!service) return;
-    setStatusMsg("Finishing campaign...");
-    await service.finishCampaign(pk);
-    setStatusMsg("Campaign finished!");
-    await loadCampaigns();
   };
 
   const handleDisableInst = async () => {
     if (!service) return;
-    setStatusMsg("Disabling institution...");
-    await service.disableInstitution();
-    setStatusMsg("Institution disabled!");
   };
 
   const handleSetAuth = async () => {
     if (!service) return;
-    const newAuth = wallet.publicKey!; // example: reset to self
-    setStatusMsg("Setting authority...");
-    await service.setAuthority(newAuth);
-    setStatusMsg("Authority updated!");
   };
 
   const handleSetFee = async () => {
     if (!service) return;
-    const fee = 500; // example fee
-    setStatusMsg("Setting fee...");
-    await service.setFee(fee);
-    setStatusMsg("Fee updated!");
   };
 
   const handleSubmitContract = async () => {
     if (!service) return;
-    setStatusMsg("Submitting contract...");
-    await service.submitContract();
-    setStatusMsg("Contract submitted!");
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -122,7 +131,7 @@ export const Campaigns: React.FC = () => {
   const handleUpload = async () => {
     if (!uploadService || !selectedFile) return;
     setStatusMsg("Uploading image...");
-    const res = await uploadService.uploadFile(selectedFile);
+    const res = await uploadService.uploadFile(selectedFile, "campaign");
     setFileID(res.fileId);
     setStatusMsg("Image uploaded!");
   };
@@ -146,7 +155,7 @@ export const Campaigns: React.FC = () => {
         <>
           <div className="mb-6 p-4 border-2 border-soft-lavender rounded-lg">
             <h3 className="text-xl font-semibold mb-3 text-vibrant-purple">
-              Start New Campaign
+              Create Campaign
             </h3>
             {fileID && (
               <img
@@ -196,11 +205,11 @@ export const Campaigns: React.FC = () => {
                 )}
               </div>
               <button
-                onClick={handleStart}
+                onClick={handleCreateCampaign}
                 disabled={!newName}
                 className="px-4 py-2 bg-vibrant-purple hover:bg-soft-lavender text-white font-semibold rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Start
+                Create Campaign
               </button>
             </div>
           </div>
@@ -211,10 +220,10 @@ export const Campaigns: React.FC = () => {
             </h3>
             <div className="flex flex-wrap gap-2">
               <button
-                onClick={handleBuy}
+                onClick={handleInitInstitution}
                 className="px-4 py-2 bg-vibrant-purple hover:bg-soft-lavender text-white font-semibold rounded-md transition-colors"
               >
-                Buy Token
+                create institition
               </button>
               <button
                 onClick={handleClaim}
@@ -246,6 +255,12 @@ export const Campaigns: React.FC = () => {
               >
                 Submit Contract
               </button>
+              <a
+                href="https://drive.google.com/uc?export=download&id=fileid"
+                download
+              >
+                Download PDF
+              </a>
             </div>
           </div>
 

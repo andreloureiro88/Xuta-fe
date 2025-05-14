@@ -5,7 +5,7 @@ import { WalletName } from "@solana/wallet-adapter-base";
 import WalletModalPicker from "../components/WalletModalPicker";
 import { Link } from "react-router-dom";
 
-const Home: React.FC = () => {
+export const Home: React.FC = () => {
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState<WalletName | null>(null);
 
@@ -35,12 +35,12 @@ const Home: React.FC = () => {
             </li>
 
             <li>
-              <a
-                href="#investors"
-                className="transition-all transform-origin-center duration-300 ease-in-out hover:text-lg"
+              <Link
+                to="institutions"
+                className="text-[var(--light-green)] transition-all transform-origin-center duration-300 ease-in-out hover:text-lg"
               >
-                Investors
-              </a>
+                Institutions
+              </Link>
             </li>
             <li>
               <Link
