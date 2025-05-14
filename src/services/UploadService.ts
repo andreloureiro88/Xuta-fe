@@ -13,11 +13,11 @@ export class UploadService {
    * @param metadata Optional metadata to include with the file
    * @returns Promise with the upload response
    */
-  async uploadFile(file: File): Promise<any> {
+  async uploadFile(file: File, type: string): Promise<any> {
     try {
       const formData = new FormData();
-      formData.append("image", file);
-
+      formData.append("file", file);
+      formData.append("type", type);
       const response = await axios.post(`${this.baseUrl}/upload`, formData);
 
       return response.data;
