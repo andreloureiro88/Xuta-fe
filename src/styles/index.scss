@@ -11,28 +11,26 @@
 @import url("https://fonts.googleapis.com/css2?family=Cascadia+Mono:ital,wght@0,200..700;1,200..700&display=swap");
 
 @import url("tailwindcss");
+@import "primereact/resources/themes/lara-dark-indigo/theme.css"; // theme
+@import "primereact/resources/primereact.min.css"; // core css
+
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap");
 
 /* Applying fonts to elements */
 body {
+  font-family: "Orbitron", "sans-serif";
   background-color: $deep-navy;
-  font-family: "Open Sans", sans-serif;
   h1,
   h2,
   h3,
   h4,
   h5,
   h6 {
-    font-family: "Buleten", sans-serif;
     color: $soft-lavender;
   }
 
   button {
     cursor: pointer;
-    font-family: "Roboto", sans-serif;
-  }
-
-  span {
-    font-family: "Roboto", sans-serif;
   }
 
   .code {
@@ -107,4 +105,41 @@ body {
 .sections-container > div:nth-child(even) {
   align-self: flex-end;
   background-color: $soft-lavender; /* soft lavender */
+}
+
+@layer utilities {
+  .animate-gradient-move {
+    background-size: 200% 200%;
+    animation: gradient-move 3s ease-in-out infinite;
+  }
+  @keyframes gradient-move {
+    0%,
+    100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+  .glow-crypto {
+    filter: drop-shadow(0 0 32px #a5f3fc) drop-shadow(0 0 8px #a78bfa);
+  }
+  .neon-crypto {
+    color: #39ff14;
+    text-shadow: 0 0 8px #39ff14, 0 0 16px #39ff14, 0 0 32px #39ff14,
+      0 0 64px #39ff14, 0 0 2px #fff;
+    animation: neon-pulse 2.5s ease-in-out infinite;
+  }
+
+  @keyframes neon-pulse {
+    0%,
+    100% {
+      text-shadow: 0 0 8px #39ff14, 0 0 16px #39ff14, 0 0 32px #39ff14,
+        0 0 64px #39ff14, 0 0 2px #fff;
+    }
+    50% {
+      text-shadow: 0 0 12px #39ff14, 0 0 24px #39ff14, 0 0 48px #39ff14,
+        0 0 80px #39ff14, 0 0 4px #fff;
+    }
+  }
 }

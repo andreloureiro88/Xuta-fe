@@ -2,7 +2,11 @@
 export default {
   content: ["./src/**/*.{js,jsx,ts,tsx,scss}"],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        crypto: ["Orbitron", "sans-serif"],
+      },
+    },
   },
   plugins: [],
 };

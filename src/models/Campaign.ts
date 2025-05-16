@@ -1,13 +1,20 @@
 export default interface Campaign {
-  name: string;
-  owner: string;
-  contract: string;
-  ratio: number;
-  target: number;
-  intialDate: number;
-  dueDate: number;
-  totalValue: number;
-  currentTokens: number;
-  currentFees: number;
-  status: string;
+  publicKey: string;
+  account: {
+    name: string;
+    owner: string;
+    contract: string;
+    ratio: number;
+    target: number;
+    initialDate: number;
+    dueDate: number;
+    totalValue: number;
+    currentTokens: number;
+    currentFees: number;
+    status: string;
+    institutionName: string;
+    image: string;
+    authority: string;
+    description: string;
+  };
 }

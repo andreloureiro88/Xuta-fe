@@ -7,11 +7,16 @@ import UploadService from "../services/UploadService";
 import { PublicKey } from "@solana/web3.js";
 import AnimatedButton from "./AnimatedButton";
 import toast from "react-hot-toast";
+import { InputText } from "primereact/inputtext";
+import { InputTextarea } from "primereact/inputtextarea";
+import { FloatLabel } from "primereact/floatlabel";
+import { Button } from "primereact/button";
 
 interface InstitutionForm {
   pubkey: string;
   name: string;
   image: File | null;
+  description: string;
   contract: File | null;
 }
 
@@ -20,6 +25,7 @@ interface FormErrors {
   name?: string;
   image?: string;
   contract?: string;
+  description?: string;
 }
 
 interface InstitutionFormProps {
@@ -40,6 +46,7 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
     name: "",
     image: null,
     contract: null,
+    description: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -58,8 +65,10 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
     return Object.keys(errs).length === 0;
   };
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value, files } = e.target;
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value, files } = e.target as HTMLInputElement;
     console.log(name, value, files);
     setForm((prev) => ({
       ...prev,
@@ -108,7 +117,9 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
 
       // Create institution
       await xutaService.initInstitution(
+        imageUrl.fileId,
         form.name,
+        form.description,
         contractUrl.fileId,
         new PublicKey(form.pubkey)
       );
@@ -153,110 +164,135 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
       <form
         ref={formRef}
         onSubmit={handleSubmit}
-        className="max-w-md mx-auto p-4 bg-deep-navy text-white rounded-2xl shadow-lg"
+        className="flex flex-col gap-6"
       >
-        <h2 className="text-2xl font-bold mb-4 text-soft-lavender text-center">
-          Create Institution
-        </h2>
+        <div>
+          <div className="flex items-center gap-2">
+            <div className="flex h-30 bg-gray-200 items-center justify-center rounded border border-dashed border-soft-lavender mb-2">
+              {imageFile ? (
+                <img
+                  src={URL.createObjectURL(imageFile)}
+                  alt="Institution preview"
+                  className="max-h-full max-w-full object-contain rounded"
+                />
+              ) : (
+                <span className="text-gray-500">Image Preview</span>
+              )}
+            </div>
 
-        <div className="mb-4">
-          <div className="w-full h-40 bg-gray-200 flex items-center justify-center rounded border border-dashed border-soft-lavender mb-2">
-            {imageFile ? (
-              <img
-                src={URL.createObjectURL(imageFile)}
-                alt="Institution preview"
-                className="max-h-full max-w-full object-contain rounded"
+            <div className="flex justify-center items-center flex-col gap-2">
+              <Button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const fileInput = document.getElementById(
+                    "file-input"
+                  ) as HTMLInputElement;
+                  fileInput.click();
+                }}
+                label="Choose Image"
+                icon="pi pi-image"
               />
-            ) : (
-              <span className="text-gray-500">Image Preview</span>
+              <span className="text-xs text-gray-500">(max 1MB)</span>
+            </div>
+          </div>
+          {errors.image && (
+            <small className="p-error block mt-1">{errors.image}</small>
+          )}
+        </div>
+
+        <div>
+          <FloatLabel>
+            <InputText
+              id="pubkey"
+              name="pubkey"
+              value={form.pubkey}
+              onChange={handleChange}
+              className="w-full"
+            />
+            <label htmlFor="pubkey">Public Key</label>
+          </FloatLabel>
+          {errors.pubkey && (
+            <small className="p-error block mt-1">{errors.pubkey}</small>
+          )}
+        </div>
+
+        <div>
+          <FloatLabel>
+            <InputText
+              id="name"
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              className="w-full"
+            />
+            <label htmlFor="name">Name</label>
+          </FloatLabel>
+          {errors.name && (
+            <small className="p-error block mt-1">{errors.name}</small>
+          )}
+        </div>
+
+        <div>
+          <FloatLabel>
+            <InputTextarea
+              id="description"
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              rows={4}
+              className="w-full"
+              placeholder="Enter institution description..."
+            />
+            <label htmlFor="description">Description</label>
+          </FloatLabel>
+          {errors.description && (
+            <small className="p-error block mt-1">{errors.description}</small>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between ">
+          <div className="flex gap-2 items-center">
+            <Button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const contractInput = document.getElementById(
+                  "contract-input"
+                ) as HTMLInputElement;
+                contractInput.click();
+              }}
+              label="Choose Contract"
+              icon="pi pi-file-pdf"
+            />
+            <span className="text-xs text-gray-500">(max 1MB)</span>
+            {form.contract && (
+              <p className="text-sm mb-1 text-soft-lavender">
+                {form.contract?.name}
+              </p>
+            )}
+            {errors.contract && (
+              <p className="text-red-500 text-sm">{errors.contract}</p>
             )}
           </div>
-
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              const fileInput = document.getElementById(
-                "file-input"
-              ) as HTMLInputElement;
-              fileInput.click();
-            }}
-            className="w-full py-2 px-4 rounded bg-gradient-to-r from-vibrant-purple to-soft-lavender text-white font-semibold hover:opacity-90 transition-opacity"
-          >
-            Choose Image
-          </button>
-          {errors.image && (
-            <p className="text-red-500 text-sm">{errors.image}</p>
-          )}
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm mb-1 text-soft-lavender">
-            Pubkey
-          </label>
-          <input
-            type="text"
-            name="pubkey"
-            value={form.pubkey}
-            onChange={handleChange}
-            className="w-full p-2 rounded border border-soft-lavender bg-transparent text-white"
-          />
-          {errors.pubkey && (
-            <p className="text-red-500 text-sm">{errors.pubkey}</p>
-          )}
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm mb-1 text-soft-lavender">Name</label>
-          <input
-            type="text"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            className="w-full p-2 rounded border border-soft-lavender bg-transparent text-white"
-          />
-          {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
-        </div>
-
-        <div className="mb-6">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              const contractInput = document.getElementById(
-                "contract-input"
-              ) as HTMLInputElement;
-              contractInput.click();
-            }}
-            className="w-full py-2 px-4 rounded bg-gradient-to-r from-vibrant-purple to-soft-lavender text-white font-semibold hover:opacity-90 transition-opacity"
-          >
-            Choose Contract
-          </button>
-          {form.contract && (
-            <p className="text-sm mb-1 text-soft-lavender">
-              {form.contract?.name}
-            </p>
-          )}
-          {errors.contract && (
-            <p className="text-red-500 text-sm">{errors.contract}</p>
-          )}
-        </div>
-
-        {isLoading && (
-          <div className="flex justify-center items-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-soft-lavender"></div>
+          <div>
+            {isLoading && (
+              <div className="flex justify-center items-center mr-4">
+                <i className="pi pi-spin pi-spinner text-4xl text-light-green"></i>
+              </div>
+            )}
+            {!isLoading && (
+              <Button
+                type="submit"
+                severity="success"
+                className="p-button-raised"
+                label="Create"
+                icon="pi pi-check"
+              />
+            )}
           </div>
-        )}
-
-        {!isLoading && (
-          <button
-            type="submit"
-            className="w-full py-2 px-4 rounded bg-gradient-to-r from-vibrant-purple to-soft-lavender text-white font-semibold"
-          >
-            Create
-          </button>
-        )}
+        </div>
       </form>
     </>
   );

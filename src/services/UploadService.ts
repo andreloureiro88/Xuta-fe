@@ -4,6 +4,8 @@ export class UploadService {
   private baseUrl: string;
 
   constructor(baseUrl: string = "https://xutabe.onrender.com") {
+    //"http://localhost:3000") {
+    //"https://xutabe.onrender.com") {
     this.baseUrl = baseUrl;
   }
 
@@ -25,6 +27,11 @@ export class UploadService {
       console.error("Error uploading file:", error);
       throw error;
     }
+  }
+
+  wakeUpServer() {
+    axios.get(`${this.baseUrl}/ping`);
+    return;
   }
 }
 

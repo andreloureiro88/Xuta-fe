@@ -4,13 +4,14 @@ import "@solana/wallet-adapter-react-ui/styles.css";
 import { WalletName } from "@solana/wallet-adapter-base";
 import WalletModalPicker from "../components/WalletModalPicker";
 import { Link } from "react-router-dom";
+import { Button } from "primereact/button";
 
 export const Home: React.FC = () => {
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState<WalletName | null>(null);
 
   return (
-    <div className="bg-[var(--deep-navy)] text-white font-sans">
+    <div className="bg-[var(--deep-navy)] text-white">
       <header className="bg-[var(--vibrant-purple)]">
         <nav className="container mx-auto flex items-center justify-between py-4 px-6">
           <a href="#" className="text-2xl font-bold">
@@ -55,127 +56,132 @@ export const Home: React.FC = () => {
         </nav>
       </header>
 
-      <section id="hero" className="pt-16 pb-20 text-center">
-        <div className="container mx-auto px-6">
-          <h1 className="text-5xl font-extrabold mb-4">
-            Invest in Tomorrow’s Stars Today
-          </h1>
-          <p className="text-xl mb-8 text-[var(--soft-lavender)]">
-            Xuta lets fans, clubs, and investors buy fractionalized tokens of
-            athletes’ future earnings on Solana.
-          </p>
-          <a
-            href="#clubs"
-            className="inline-block bg-[var(--vibrant-purple)] hover:bg-[var(--soft-lavender)] 
-         text-white font-semibold px-6 py-3 rounded-lg transition"
-          >
-            Learn More
-          </a>
+      <section id="hero" className="pt-16 pb-20">
+        <div className="container mx-auto px-6 flex flex-col md:flex-row items-center  gap-8">
+          {/* Left: Info */}
+          <div className="flex-1 flex justify-center md:justify-start">
+            <div className="rounded-3xl bg-white/10 backdrop-blur-md shadow-2xl p-10  flex flex-col items-center md:items-start">
+              <h1 className="text-5xl font-extrabold mb-4 font-crypto bg-gradient-to-r from-light-green via-vibrant-purple to-soft-lavender bg-clip-text text-transparent animate-gradient-move ">
+                Invest in Tomorrow's Stars{" "}
+                <span className="text-light-green glow-crypto neon-crypto">
+                  Today
+                </span>
+              </h1>
+              <p className="text-xl mb-2 text-[var(--soft-lavender)] font-crypto">
+                Xuta lets fans, clubs, and investors buy fractionalized tokens
+                of athletes' future earnings on Solana.
+              </p>
+            </div>
+          </div>
+          {/* Right: Football Player Silhouette */}
+          <div className="flex justify-center md:justify-end mt-8 md:mt-0">
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/8/8e/Football_player_silhouette.png"
+              alt="Football player silhouette"
+              className="max-w-xs w-full h-auto opacity-90 drop-shadow-2xl glow-crypto"
+              style={{ filter: "grayscale(1)" }}
+            />
+          </div>
         </div>
       </section>
 
-      <section className="flex flex-wrap py-6">
-        <div
-          id="clubs"
-          className="w-full md:w-1/2 box-border flex flex-col items-center gap-8 bg-soft-lavender ease-in-out transition-all hover:skew-x-[-5deg]"
-        >
-          <div className="px-30 py-6 flex flex-col duration-300">
-            <h2 className="text-2xl font-bold mb-2 text-vibrant-purple">
-              For Feeder Clubs
-            </h2>
-            <p className="mb-4 code">
-              Tokenize a percentage of future transfer fees to get upfront
-              liquidity without losing control.
-            </p>
-            <ul className="list-disc pl-5 space-y-2 mb-4 code">
-              <li>Smart-contract tokenization</li>
-              <li>Upfront funding</li>
-              <li>On-chain legal hashes</li>
-            </ul>
-            <a
-              href="#"
-              className="text-light-green font-semibold hover:underline"
-            >
-              Get Started →
-            </a>
+      <section className="py-12 bg-gradient-to-br from-[var(--deep-navy)] to-[var(--vibrant-purple)]">
+        <div className="container mx-auto px-2 flex flex-col gap-8">
+          {/* Clubs */}
+          <div className="relative w-full max-w-7xl mx-auto rounded-2xl bg-white/10 backdrop-blur-md shadow-2xl border border-white/20 p-8 flex flex-col md:flex-row items-center group overflow-hidden skew-y-[-2deg]">
+            <div className="flex-shrink-0 mb-4 md:mb-0 md:mr-8 order-2 md:order-1">
+              <i className="pi pi-building text-vibrant-purple text-6xl opacity-80" />
+            </div>
+            <div className="flex-1 order-1 md:order-2">
+              <h2 className="text-2xl font-bold mb-2 text-light-green flex items-center gap-2 neon-crypto">
+                For Feeder Clubs
+              </h2>
+              <p className="mb-4 text-base text-white/90">
+                Tokenize a percentage of future transfer fees to get upfront
+                liquidity without losing control.
+              </p>
+              <ul className="list-disc pl-5 space-y-2 mb-4 text-white/80">
+                <li>Smart-contract tokenization</li>
+                <li>Upfront funding</li>
+                <li>On-chain legal hashes</li>
+              </ul>
+              <Button
+                label="Get Started →"
+                className="p-button-outlined p-button-lg border-light-green text-light-green hover:bg-light-green hover:text-deep-navy"
+              />
+            </div>
           </div>
-        </div>
-
-        <div
-          id="athletes"
-          className="w-full md:w-1/2 box-border flex flex-col items-center gap-8 duration-300 ease-in-out transition-all hover:skew-x-[5deg]"
-        >
-          <div className="px-30 py-6 flex flex-col">
-            <h2 className="text-2xl font-bold mb-2 text-vibrant-purple">
-              For Aspiring Athletes
-            </h2>
-            <p className="mb-4 code">
-              Secure training & education capital by issuing tokens on your
-              future pro earnings.
-            </p>
-            <ul className="list-disc pl-5 space-y-2 mb-4 code">
-              <li>Custom earning schedules</li>
-              <li>Transparent dashboard</li>
-              <li>NIL & NCAA compliant</li>
-            </ul>
-            <a
-              href="#"
-              className="text-light-green font-semibold hover:underline"
-            >
-              Mint Your Tokens →
-            </a>
+          {/* Athletes */}
+          <div className="relative w-full max-w-7xl mx-auto rounded-2xl bg-gradient-to-r from-vibrant-purple/30 to-soft-lavender/20 backdrop-blur-md shadow-2xl border border-white/20 p-8 flex flex-col md:flex-row items-center group overflow-hidden skew-y-[2deg]">
+            <div className="flex-shrink-0 mb-4 md:mb-0 md:mr-8 order-1">
+              <i className="pi pi-star text-vibrant-purple text-6xl opacity-80" />
+            </div>
+            <div className="flex-1 order-2">
+              <h2 className="text-2xl font-bold mb-2 text-light-green flex items-center gap-2 neon-crypto">
+                For Aspiring Athletes
+              </h2>
+              <p className="mb-4 text-base text-white/90">
+                Secure training & education capital by issuing tokens on your
+                future pro earnings.
+              </p>
+              <ul className="list-disc pl-5 space-y-2 mb-4 text-white/80">
+                <li>Custom earning schedules</li>
+                <li>Transparent dashboard</li>
+                <li>NIL & NCAA compliant</li>
+              </ul>
+              <Button
+                label="Mint Your Tokens →"
+                className="p-button-outlined p-button-lg border-light-green text-light-green hover:bg-light-green hover:text-deep-navy"
+              />
+            </div>
           </div>
-        </div>
-
-        <div
-          id="fans"
-          className="w-full md:w-1/2 flex flex-col items-center gap-8 ease-in-out duration-300 transition-all hover:skew-x-[5deg]"
-        >
-          <div className="px-30 py-6 flex flex-col">
-            <h2 className="text-2xl font-bold mb-2 text-vibrant-purple">
-              For Passionate Fans
-            </h2>
-            <p className="mb-4 code">
-              Back your hometown heroes early and earn rewards when they make it
-              big.
-            </p>
-            <ul className="list-disc pl-5 space-y-2 mb-4 code">
-              <li>Easy USDC/USDT buy flow</li>
-              <li>Exclusive NFT badges</li>
-              <li>Milestone notifications</li>
-            </ul>
-            <a
-              href="#"
-              className="text-light-green font-semibold hover:underline"
-            >
-              Explore Tokens →
-            </a>
+          {/* Fans */}
+          <div className="relative w-full max-w-7xl mx-auto rounded-2xl bg-white/10 backdrop-blur-md shadow-2xl border border-white/20 p-8 flex flex-col md:flex-row items-center group overflow-hidden skew-y-[-2deg]">
+            <div className="flex-shrink-0 mb-4 md:mb-0 md:mr-8 order-2 md:order-1">
+              <i className="pi pi-users text-vibrant-purple text-6xl opacity-80" />
+            </div>
+            <div className="flex-1 order-1 md:order-2">
+              <h2 className="text-2xl font-bold mb-2 text-light-green flex items-center gap-2 neon-crypto">
+                For Passionate Fans
+              </h2>
+              <p className="mb-4 text-base text-white/90">
+                Back your hometown heroes early and earn rewards when they make
+                it big.
+              </p>
+              <ul className="list-disc pl-5 space-y-2 mb-4 text-white/80">
+                <li>Easy USDC/USDT buy flow</li>
+                <li>Exclusive NFT badges</li>
+                <li>Milestone notifications</li>
+              </ul>
+              <Button
+                label="Explore Tokens →"
+                className="p-button-outlined p-button-lg border-light-green text-light-green hover:bg-light-green hover:text-deep-navy"
+              />
+            </div>
           </div>
-        </div>
-
-        <div
-          id="investors"
-          className="w-full md:w-1/2 flex flex-col items-center gap-8 bg-soft-lavender ease-in-out duration-300 transition-all hover:skew-x-[-5deg]"
-        >
-          <div className="px-30 py-6 flex flex-col">
-            <h2 className="text-2xl font-bold mb-2 text-vibrant-purple">
-              For Savvy Investors
-            </h2>
-            <p className="mb-4 code">
-              Trade fractional athlete tokens in a data-driven marketplace to
-              maximize ROI.
-            </p>
-            <ul className="list-disc pl-5 space-y-2 mb-4 code">
-              <li>Live valuation dashboards</li>
-              <li>Player-stat filters</li>
-              <li>Secondary market access</li>
-            </ul>
-            <a
-              href="#"
-              className="text-light-green font-semibold hover:underline"
-            >
-              View Dashboard →
-            </a>
+          {/* Investors */}
+          <div className="relative w-full max-w-7xl mx-auto rounded-2xl bg-gradient-to-r from-vibrant-purple/30 to-soft-lavender/20 backdrop-blur-md shadow-2xl border border-white/20 p-8 flex flex-col md:flex-row items-center group overflow-hidden skew-y-[2deg]">
+            <div className="flex-shrink-0 mb-4 md:mb-0 md:mr-8 order-1">
+              <i className="pi pi-chart-line text-vibrant-purple text-6xl opacity-80" />
+            </div>
+            <div className="flex-1 order-2">
+              <h2 className="text-2xl font-bold mb-2 text-light-green flex items-center gap-2 neon-crypto">
+                For Savvy Investors
+              </h2>
+              <p className="mb-4 text-base text-white/90">
+                Trade fractional athlete tokens in a data-driven marketplace to
+                maximize ROI.
+              </p>
+              <ul className="list-disc pl-5 space-y-2 mb-4 text-white/80">
+                <li>Live valuation dashboards</li>
+                <li>Player-stat filters</li>
+                <li>Secondary market access</li>
+              </ul>
+              <Button
+                label="View Dashboard →"
+                className="p-button-outlined p-button-lg border-light-green text-light-green hover:bg-light-green hover:text-deep-navy"
+              />
+            </div>
           </div>
         </div>
       </section>

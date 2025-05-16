@@ -1,5 +1,11 @@
 export default interface Institution {
-  name: string;
-  owner: string;
-  url: string;
+  publicKey: string;
+  account: {
+    name: string;
+    description: string;
+    image: string;
+    contract: string;
+    authority: string;
+    isActive: boolean;
+  };
 }

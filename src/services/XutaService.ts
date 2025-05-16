@@ -5,7 +5,7 @@ import {
   SystemProgram,
 } from "@solana/web3.js";
 import { Program, AnchorProvider, Idl } from "@coral-xyz/anchor";
-import type { Xuta } from "../../idl/xuta";
+import type { XutaSc } from "../../idl/xuta";
 import XutaIDL from "../../idl/xuta_sc.json";
 import { BN } from "bn.js";
 import {
@@ -30,7 +30,7 @@ export class XutaService {
     console.log("Provider wallet:", provider.wallet.publicKey.toString());
 
     // Use the IDL directly with type assertion
-    this.program = new Program(XutaIDL as Xuta, provider);
+    this.program = new Program(XutaIDL as XutaSc, provider);
     console.log(this.program);
     // Log the program instance
     console.log(
@@ -78,7 +78,7 @@ export class XutaService {
     )[0];
   }
 
-  async getXutaConfig(program: Program<Xuta>) {
+  async getXutaConfig(program: Program<XutaSc>) {
     return program.account.config.fetch(
       this.deriveConfigPDA(program.programId)
     );
@@ -86,10 +86,11 @@ export class XutaService {
 
   // Institution Methods
   async initialize() {
-    const [configPda] = PublicKey.findProgramAddressSync(
+    console.log("id", this.program.programId.toBase58());
+    const configPda = PublicKey.findProgramAddressSync(
       [Buffer.from("config")],
       this.program.programId
-    );
+    )[0];
 
     console.log(
       "Initializing program with authority:",
@@ -98,7 +99,7 @@ export class XutaService {
     console.log("Config PDA:", configPda.toString());
 
     return await this.program.methods
-      .initialize()
+      .init()
       .accounts({
         authority: this.provider.wallet.publicKey,
         config: configPda,
@@ -158,6 +159,7 @@ export class XutaService {
     name: string,
     contract: string,
     image: string,
+    description: string,
     ratio: number,
     targetAmount: number,
     initialDate: number,
@@ -167,30 +169,22 @@ export class XutaService {
     try {
       // Generate and initialize mint accounts
       const mintPlayerKey = Keypair.generate();
-      const mintQuoteKey = Keypair.generate();
 
       console.log("Initializing mint accounts...");
-      const mintPlayer = await this.initializeMint(mintPlayerKey, 6); // 6 decimals for player token
-      const mintQuote = await this.initializeMint(mintQuoteKey, 9); // 9 decimals for quote token
 
-      console.log("Mint accounts initialized:", {
-        mintPlayer: mintPlayer.toBase58(),
-        mintQuote: mintQuote.toBase58(),
-      });
+      const mintQuote = new PublicKey(
+        "7ibogEL4YokK34GBe8iKXxUxU1KaTcignu31gz9g6Py9"
+      );
 
       // Derive PDAs
       const [campaignPda] = PublicKey.findProgramAddressSync(
-        [Buffer.from("campaign"), mintPlayer.toBuffer()],
+        [Buffer.from("campaign"), mintPlayerKey.publicKey.toBuffer()],
         this.program.programId
       );
 
       const [vaultPda] = PublicKey.findProgramAddressSync(
-        [
-          campaignPda.toBuffer(),
-          TOKEN_PROGRAM_ID.toBuffer(),
-          mintQuote.toBuffer(),
-        ],
-        ASSOCIATED_TOKEN_PROGRAM_ID
+        [Buffer.from("vault"), campaignPda.toBuffer()],
+        this.program.programId
       );
 
       const institutionPda = this.deriveInstitutionPDA(
@@ -198,47 +192,7 @@ export class XutaService {
         institutionName
       );
 
-      const [configPda] = PublicKey.findProgramAddressSync(
-        [Buffer.from("config")],
-        this.program.programId
-      );
-
-      // Get the owner's token account
-      const ownerTokenAccount = await this.getAssociatedTokenAddress(
-        mintQuote,
-        this.provider.wallet.publicKey
-      );
-
-      // Check if the token account exists
-      const tokenAccountInfo = await this.provider.connection.getAccountInfo(
-        ownerTokenAccount
-      );
-
-      // If the token account doesn't exist, create it
-      if (!tokenAccountInfo) {
-        console.log(
-          "Creating owner token account:",
-          ownerTokenAccount.toBase58()
-        );
-        const createAtaIx = createAssociatedTokenAccountInstruction(
-          this.provider.wallet.publicKey, // payer
-          ownerTokenAccount, // ata
-          this.provider.wallet.publicKey, // owner
-          mintQuote // mint
-        );
-
-        const tx = new Transaction().add(createAtaIx);
-        await this.provider.sendAndConfirm(tx);
-        console.log("Owner token account created successfully");
-      }
-
-      console.log("PDAs:", {
-        campaign: campaignPda.toBase58(),
-        vault: vaultPda.toBase58(),
-        institution: institutionPda.toBase58(),
-        config: configPda.toBase58(),
-        ownerTokenAccount: ownerTokenAccount.toBase58(),
-      });
+      const configPda = this.deriveConfigPDA(this.program.programId);
 
       // Create the campaign
       const tx = await this.program.methods
@@ -246,6 +200,7 @@ export class XutaService {
           name,
           contract,
           image,
+          description,
           ratio,
           new BN(targetAmount),
           new BN(initialDate),
@@ -253,17 +208,16 @@ export class XutaService {
         )
         .accounts({
           authority: this.provider.wallet.publicKey,
-          mintPlayer,
+          mintPlayer: mintPlayerKey.publicKey,
           mintQuote,
-          ownerTokenAccount,
           campaign: campaignPda,
           institution: institutionPda,
           config: configPda,
           vault: vaultPda,
           tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
           systemProgram: SystemProgram.programId,
         })
+        .signers([mintPlayerKey])
         .rpc();
 
       console.log("Campaign created successfully:", {
@@ -408,7 +362,9 @@ export class XutaService {
 
   // Institution Methods
   async initInstitution(
+    image: string,
     name: string,
+    description: string,
     contract: string,
     newInstitutionAuthority: PublicKey
   ) {
@@ -420,34 +376,6 @@ export class XutaService {
     console.log("Institution PDA:", institutionPda.toString());
     console.log("New Authority:", newInstitutionAuthority.toString());
 
-    /*
-    // Initialize the program first
-    try {
-      const [configPda] = PublicKey.findProgramAddressSync(
-        [Buffer.from("config")],
-        this.program.programId
-      );
-
-      console.log(
-        "Initializing program with config PDA:",
-        configPda.toString()
-      );
-
-      await this.program.methods
-        .initialize()
-        .accounts({
-          authority: this.provider.wallet.publicKey,
-          config: configPda,
-          systemProgram: SystemProgram.programId,
-        })
-        .rpc();
-
-      console.log("Program initialized successfully");
-    } catch (error) {
-      // If initialization fails, it might already be initialized
-      console.log("Program might already be initialized:", error);
-    }
-*/
     console.log("Creating institution with params:", {
       contract,
       name,
@@ -459,7 +387,7 @@ export class XutaService {
     });
 
     return await this.program.methods
-      .initInstitution(name, contract)
+      .initInstitution(name, contract, image, description)
       .accounts({
         institutionAuthority: this.provider.wallet.publicKey,
         institution: institutionPda,
@@ -505,23 +433,6 @@ export class XutaService {
       .rpc();
   }
 
-  // Campaign Status Methods
-  async startCampaign(campaignName: string) {
-    const [campaignPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from("campaign"), Buffer.from(campaignName)],
-      this.program.programId
-    );
-
-    return await this.program.methods
-      .startCampaign()
-      .accounts({
-        owner: this.provider.wallet.publicKey,
-        campaign: campaignPda,
-        systemProgram: new PublicKey("11111111111111111111111111111111"),
-      })
-      .rpc();
-  }
-
   async pauseCampaign() {
     return await this.program.methods.pauseCampaign().rpc();
   }
@@ -540,10 +451,10 @@ export class XutaService {
   }
 
   async getConfig() {
-    const [configPda] = PublicKey.findProgramAddressSync(
+    const configPda = PublicKey.findProgramAddressSync(
       [Buffer.from("config")],
       this.program.programId
-    );
+    )[0];
     return await this.program.account.config.fetch(configPda);
   }
 

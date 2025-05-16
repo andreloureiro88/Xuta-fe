@@ -6,34 +6,36 @@ import { AnchorProvider } from "@coral-xyz/anchor";
 import { Connection } from "@solana/web3.js";
 import UploadService from "../services/UploadService";
 import WalletModalPicker from "../components/WalletModalPicker";
-import toast from "react-hot-toast";
-
-interface Institution {
-  publicKey: string;
-  account: {
-    name: string;
-    description: string;
-    image: string;
-    contract: string;
-    authority: string;
-    isActive: boolean;
-  };
-}
+import { Button } from "primereact/button";
+import { InputText } from "primereact/inputtext";
+import { FloatLabel } from "primereact/floatlabel";
+import { Dialog } from "primereact/dialog";
+import { Tag } from "primereact/tag";
+import { Image } from "primereact/image";
+import Institution from "../models/Institution";
 
 export const Institutions: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [institutions, setInstitutions] = useState<Institution[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [configExists, setConfigExists] = useState(false);
   const [service, setService] = useState<XutaService | null>(null);
   const [uploadService, setUploadService] = useState<UploadService | null>(
     null
   );
   const wallet = useWallet();
 
+  const fetchConfig = async () => {
+    const config = await service?.getConfig();
+    console.log("config", config);
+    setConfigExists(!!config);
+  };
+
   const fetchInstitutions = async () => {
     if (service) {
       try {
         const insts = await service.getInstituttions();
+
         console.log("insts", insts);
         setInstitutions(insts);
       } catch (error) {
@@ -51,10 +53,12 @@ export const Institutions: React.FC = () => {
       const xutaService = new XutaService(provider);
       setService(xutaService);
       setUploadService(new UploadService());
+      uploadService?.wakeUpServer();
     }
   }, [wallet]);
 
   useEffect(() => {
+    fetchConfig();
     fetchInstitutions();
   }, [service]);
 
@@ -62,23 +66,44 @@ export const Institutions: React.FC = () => {
     institution.account.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-soft-lavender">Institutions</h1>
+  const handleInitialize = async () => {
+    await service?.initialize();
+    fetchConfig();
+  };
 
-        {wallet.connected && (
-          <button
-            onClick={() => {
-              setIsModalOpen(true);
-              toast.success("hey");
-            }}
-            className="bg-gradient-to-r from-vibrant-purple to-soft-lavender text-white px-6 py-2 rounded-lg font-semibold hover:opacity-90 transition-opacity"
-          >
-            Create Institution
-          </button>
-        )}
-        <WalletModalPicker />
+  return (
+    <div className="container mx-auto px-4 pt-6 pb-2">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-3xl font-bold text-soft-lavender flex items-center">
+          <i className="pi pi-building mr-2"></i>
+          Institutions
+        </h1>
+        <div className="flex gap-2">
+          {wallet.connected && (
+            <>
+              {configExists ? (
+                <Button
+                  onClick={() => {
+                    setIsModalOpen(true);
+                  }}
+                  severity="success"
+                  label="Create Institution"
+                  className="p-button-raised"
+                  icon="pi pi-plus"
+                />
+              ) : (
+                <Button
+                  onClick={handleInitialize}
+                  severity="info"
+                  label="Initialize Program"
+                  className="p-button-raised"
+                  icon="pi pi-cog"
+                />
+              )}
+            </>
+          )}
+          <WalletModalPicker />
+        </div>
       </div>
 
       {!wallet.connected && (
@@ -88,69 +113,74 @@ export const Institutions: React.FC = () => {
       {wallet.connected && (
         <>
           <div className="mb-6">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search institutions by name..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full p-3 pl-10 rounded-lg bg-deep-navy border border-soft-lavender text-white placeholder-gray-400 focus:outline-none focus:border-vibrant-purple"
-              />
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            <span className="p-input-icon-left w-full">
+              <FloatLabel>
+                <span className="p-input-icon-left w-full">
+                  <i className="pi pi-search pl-4 text-soft-lavender" />
+                  <InputText
+                    id="search"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-6"
                   />
-                </svg>
-              </div>
-            </div>
+                </span>
+                <label htmlFor="search" className="text-soft-lavender pl-6">
+                  Institution name
+                </label>
+              </FloatLabel>
+            </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="flex flex-wrap gap-4 w-full">
             {filteredInstitutions.map((institution) => (
               <div
                 key={institution.publicKey}
-                className="bg-deep-navy rounded-xl p-6 shadow-lg border border-soft-lavender"
+                className="flex-1 min-w-[calc(33.333%-1rem)] max-w-[calc(33.333%-1rem)] shadow-2 border-round-xl h-full overflow-hidden bg-deep-navy border-2 border-soft-lavender relative"
               >
-                <div className="aspect-w-16 aspect-h-9 mb-4">
-                  <img
-                    src={`https://drive.google.com/thumbnail?id=${institution.account.image}`}
+                <div className="overflow-hidden flex items-center w-full h-[13rem]">
+                  <Image
+                    src={`${institution.account.image}`}
                     alt={institution.account.name}
-                    className="object-cover rounded-lg w-full h-48"
+                    className="object-cover border-round-top-xl !w-full"
+                    preview
+                    width="100%"
+                    zoomSrc={`${institution.account.image}`}
+                  />
+
+                  <Tag
+                    value={institution.account.isActive ? "Active" : "Inactive"}
+                    severity={
+                      institution.account.isActive ? "success" : "danger"
+                    }
+                    className="absolute top-2 right-2"
+                    rounded
                   />
                 </div>
-                <h3 className="text-xl font-semibold text-soft-lavender mb-2">
-                  {institution.account.name}
-                </h3>
-                <p className="text-gray-300 mb-4">
-                  {institution.account.description}
-                </p>
-                <div className="flex justify-between items-center">
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm ${
-                      institution.account.isActive
-                        ? "bg-green-500/20 text-green-400"
-                        : "bg-red-500/20 text-red-400"
-                    }`}
-                  >
-                    {institution.account.isActive ? "Active" : "Inactive"}
-                  </span>
-                  <a
-                    href={`https://drive.google.com/uc?export=download&id=${institution.account.contract}`}
-                    rel="noopener noreferrer"
-                    className="text-light-green hover:text-dark-green transition-colors"
-                  >
-                    View Contract
-                  </a>
+
+                <div className="p-2 flex flex-column gap-2">
+                  <div className="p-2 flex align-items-center gap-2">
+                    <i className="pi pi-building text-primary"></i>
+                    <span className="text-xl font-semibold text-900">
+                      {institution.account.name}
+                    </span>
+                  </div>
+                  <div className="p-2 flex flex-column gap-3">
+                    <p className="m-0 line-clamp-3 text-700">
+                      {institution.account.description}
+                    </p>
+                  </div>
+                  <div className="p-2 flex justify-content-between align-items-center">
+                    <Button
+                      icon="pi pi-file-pdf"
+                      label="Contract"
+                      severity="success"
+                      onClick={() =>
+                        window.open(
+                          `https://drive.google.com/uc?export=download&id=${institution.account.contract}`
+                        )
+                      }
+                    />
+                  </div>
                 </div>
               </div>
             ))}
@@ -159,41 +189,25 @@ export const Institutions: React.FC = () => {
       )}
 
       {/* Modal */}
-      {isModalOpen && service && uploadService && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="z-10 bg-deep-navy rounded-2xl p-6 max-w-2xl w-full mx-4 relative">
-            <button
-              onClick={() => setIsModalOpen(false)}
-              className="absolute top-4 right-4 text-soft-lavender hover:text-vibrant-purple"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-
-            <InstitutionForm
-              xutaService={service}
-              uploadService={uploadService}
-              onSuccess={() => {
-                setIsModalOpen(false);
-                fetchInstitutions();
-              }}
-              onFail={(error) => {
-                console.error("Error creating institution:", error);
-              }}
-            />
-          </div>
-        </div>
+      {service && uploadService && (
+        <Dialog
+          style={{ width: "50vw", maxWidth: "800px" }}
+          header="Create Institution"
+          visible={isModalOpen}
+          onHide={() => setIsModalOpen(false)}
+        >
+          <InstitutionForm
+            xutaService={service}
+            uploadService={uploadService}
+            onSuccess={() => {
+              setIsModalOpen(false);
+              fetchInstitutions();
+            }}
+            onFail={(error) => {
+              console.error("Error creating institution:", error);
+            }}
+          />
+        </Dialog>
       )}
     </div>
   );

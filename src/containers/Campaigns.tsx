@@ -1,323 +1,302 @@
-import React, { useEffect, useState } from "react";
-import { AnchorWallet, useWallet } from "@solana/wallet-adapter-react";
-import { PublicKey, SystemProgram, Connection } from "@solana/web3.js";
+import React, { useEffect, useState, useMemo } from "react";
+import { InputText } from "primereact/inputtext";
+import { Dropdown } from "primereact/dropdown";
 import { XutaService } from "../services/XutaService";
-import WalletModalPicker from "../components/WalletModalPicker";
-import AnimatedButton from "../components/AnimatedButton";
-import UploadService from "../services/UploadService";
+import { Button } from "primereact/button";
+import CampaignCard from "../components/CampaignCard";
+import CampaignDetailModal from "../components/CampaignDetailModal";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { Connection } from "@solana/web3.js";
 import { AnchorProvider } from "@coral-xyz/anchor";
+import Campaign from "../models/Campaign";
+import { FloatLabel } from "primereact/floatlabel";
+import { Dialog } from "primereact/dialog";
+import { CampaignForm } from "../components/CampaignForm";
+import UploadService from "../services/UploadService";
+import WalletModalPicker from "../components/WalletModalPicker";
+import Institution from "../models/Institution";
+import { Carousel } from "primereact/carousel";
+
+// Dummy types, replace with your actual campaign type
+
+const categorizeCampaign = (
+  campaign: Campaign
+): "Active" | "Upcoming" | "Past" => {
+  const now = Date.now() / 1000;
+  if (campaign.account.initialDate > now) return "Upcoming";
+  if (campaign.account.dueDate < now && campaign.account.initialDate < now)
+    return "Past";
+  return "Active";
+};
+
 export const Campaigns: React.FC = () => {
-  const wallet = useWallet();
-  const [service, setService] = useState<XutaService | null>(null);
-  const [uploadService, setUploadService] = useState<UploadService | null>(
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [institutions, setInstitutions] = useState<Institution[]>([]);
+  const [search, setSearch] = useState("");
+  const [institution, setInstitution] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(
     null
   );
-  const [campaigns, setCampaigns] = useState<
-    { publicKey: PublicKey; account: any }[]
-  >([]);
-  const [fileID, setFileID] = useState<string | null>(null);
-  const [newName, setNewName] = useState("");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [statusMsg, setStatusMsg] = useState<string | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [service, setService] = useState<XutaService | null>(null);
+  const wallet = useWallet();
+  const [createCampaignModalVisible, setCreateCampaignModalVisible] =
+    useState(false);
 
-  // Initialize service once wallet is ready
   useEffect(() => {
     if (wallet.publicKey && wallet.signTransaction) {
-      // later replace with user connection
       const connection = new Connection("http://localhost:8899", "confirmed");
-
-      const provider = new AnchorProvider(connection, wallet as AnchorWallet, {
+      const provider = new AnchorProvider(connection, wallet as any, {
         commitment: "confirmed",
       });
-
       const xutaService = new XutaService(provider);
-      console.log("xutaService", xutaService);
       setService(xutaService);
-
-      setUploadService(new UploadService());
     }
   }, [wallet]);
 
-  // Fetch all campaigns
-  const loadCampaigns = async () => {
-    console.log("Loading campaigns...");
-    if (!service) return;
-    const all = await service.getAllCampaigns();
-    console.log(all);
-    const institutions = await service.getInstituttions();
-    console.log("ins", institutions);
-
-    setCampaigns(all);
-  };
-
   useEffect(() => {
-    if (service) loadCampaigns();
+    setLoading(true);
+
+    service?.getInstituttions().then((data: Institution[]) => {
+      setInstitutions(data);
+      data.forEach((inst) => {
+        console.log("Institution Public Key:", inst.publicKey.toString());
+        console.log(
+          "Institution Authority:",
+          inst.account.authority.toString()
+        );
+      });
+    });
+
+    service?.getAllCampaigns().then((data: Campaign[]) => {
+      console.log(data);
+
+      data.forEach((campaign) => {
+        console.log("Campaign Public Key:", campaign.publicKey.toString());
+        console.log(
+          "Campaign Authority:",
+          campaign.account.authority.toString()
+        );
+      });
+      setCampaigns(data);
+      setLoading(false);
+    });
   }, [service]);
 
-  const handleCreateCampaign = async () => {
-    if (!service || !newName) return;
-    setStatusMsg("Creating campaign...");
-    await service.createCampaign(
-      newName,
-      "contract2", // creator
-      "image", // authority
-      0.5, // ratio
-      1, // targetAmount
-      1715611200, // initialDate
-      1715611200, // dueDate
-      "institution"
+  // Get unique institutions for dropdown
+  const institutionsOptions = useMemo(
+    () =>
+      institutions.map((inst) => ({
+        label: inst.account.name,
+        value: inst.account.authority.toString(),
+      })),
+    [institutions]
+  );
+
+  // Filter campaigns
+  const filtered = useMemo(() => {
+    console.log("institutions", institutions);
+    console.log("institution 2", institution?.toString());
+    const selectedInstitution = institutions.find(
+      (inst) => inst.account?.authority?.toString() === institution?.toString()
     );
-    setStatusMsg("Campaign created!");
-    await loadCampaigns();
+    return campaigns.filter((c) => {
+      const matchesName = c.account.name
+        .toLowerCase()
+        .includes(search.toLowerCase());
+      console.log("c.account.authority", c.account.authority);
+      console.log("institution", selectedInstitution);
+      const matchesInstitution =
+        !selectedInstitution ||
+        c.account.authority?.toString() ===
+          selectedInstitution?.account?.authority?.toString();
+
+      return matchesName && matchesInstitution;
+    });
+  }, [campaigns, search, institutions, institution]);
+
+  // Categorize
+  const active = filtered.filter((c) => categorizeCampaign(c) === "Active");
+  const upcoming = filtered.filter((c) => categorizeCampaign(c) === "Upcoming");
+  const past = filtered.filter((c) => categorizeCampaign(c) === "Past");
+
+  const handleCardAction = (campaign: Campaign) => {
+    setSelectedCampaign(campaign);
+    setModalVisible(true);
   };
 
-  const handleInitInstitution = async () => {
-    if (!service) return;
-    setStatusMsg("Initializing institution...");
-    await service.initInstitution(
-      "institution2233",
-      "contrac2444t",
-      new PublicKey("G98ibAo8eHdsKN8Bw43Gw8f1fvvYf8gN75AuohvaNf2A")
-    );
-    setStatusMsg("Institution initialized!");
-    await loadCampaigns();
+  const refreshCampaigns = () => {
+    setLoading(true);
+    service?.getAllCampaigns().then((data: Campaign[]) => {
+      setCampaigns(data);
+      setLoading(false);
+    });
   };
 
-  const handleStart = async () => {
-    if (!service || !newName) return;
-    setStatusMsg("Starting campaign...");
-    await service.startCampaign(newName);
-    setStatusMsg("Campaign started!");
-    await loadCampaigns();
-  };
+  const uploadService = new UploadService();
 
-  const handleBuy = async () => {
-    if (!service) return;
-  };
-
-  const handleClaim = async () => {};
-
-  const handlePause = async (pk: PublicKey) => {
-    if (!service) return;
-  };
-
-  const handleFinish = async (pk: PublicKey) => {
-    if (!service) return;
-  };
-
-  const handleDisableInst = async () => {
-    if (!service) return;
-  };
-
-  const handleSetAuth = async () => {
-    if (!service) return;
-  };
-
-  const handleSetFee = async () => {
-    if (!service) return;
-  };
-
-  const handleSubmitContract = async () => {
-    if (!service) return;
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-    }
-  };
-
-  const handleUpload = async () => {
-    if (!uploadService || !selectedFile) return;
-    setStatusMsg("Uploading image...");
-    const res = await uploadService.uploadFile(selectedFile, "campaign");
-    setFileID(res.fileId);
-    setStatusMsg("Image uploaded!");
-  };
+  const campaignCardTemplate = (c: Campaign) => (
+    <div className="font-crypto">
+      <CampaignCard
+        key={c.account.authority}
+        id={c.account.authority}
+        name={c.account.name}
+        institutionName={c.account.institutionName}
+        description={c.account.description}
+        image={c.account.image}
+        contract={c.account.contract}
+        initialDate={c.account.initialDate}
+        dueDate={c.account.dueDate}
+        status={Object.keys(c.account.status)[0]}
+        onAction={() => handleCardAction(c)}
+      />
+    </div>
+  );
 
   return (
-    <div className="p-5 font-sans bg-deep-navy text-white">
-      <header className="bg-[var(--vibrant-purple)]">
-        <nav className="container mx-auto flex items-center justify-between py-4 px-6">
-          <a href="#" className="text-2xl font-bold">
-            Campaigns
-          </a>
+    <div className="mx-[16rem] mt-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-4xl font-bold text-center flex-1">
+          Campaign Gallery
+        </h1>
+        <div className="flex items-center gap-4">
+          <Button
+            label="Create Campaign"
+            icon="pi pi-plus"
+            className="ml-4"
+            onClick={() => setCreateCampaignModalVisible(true)}
+          />
           <WalletModalPicker />
-        </nav>
-      </header>
-
-      {!wallet.connected && (
-        <p className="text-pinterest mb-4">Please connect your wallet.</p>
-      )}
-
-      {wallet.connected && (
-        <>
-          <div className="mb-6 p-4 border-2 border-soft-lavender rounded-lg">
-            <h3 className="text-xl font-semibold mb-3 text-vibrant-purple">
-              Create Campaign
-            </h3>
-            {fileID && (
-              <img
-                src={`https://drive.google.com/thumbnail?id=${fileID}`}
-                alt="Selected campaign image"
-                width={100}
-                height={100}
-                className="w-32 h-32 object-cover"
+        </div>
+      </div>
+      <div className="flex flex-col md:flex-row gap-4 mb-8 justify-center">
+        <div className="w-full md:w-1/2">
+          <FloatLabel>
+            <span className="p-input-icon-left w-full">
+              <i className="pi pi-search pl-4 text-soft-lavender" />
+              <InputText
+                id="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-6"
               />
-            )}
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Campaign name"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                className="px-3 py-2 bg-deep-navy border-2 border-soft-lavender rounded-md focus:outline-none focus:ring-2 focus:ring-vibrant-purple"
-              />
-
-              <AnimatedButton
-                text="Upload Image"
-                trigger={() => {
-                  const fileInput = document.getElementById(
-                    "file-input"
-                  ) as HTMLInputElement;
-                  fileInput.click();
-                }}
-              ></AnimatedButton>
-              <input
-                id="file-input"
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-
-              <div className="mt-2">
-                {selectedFile && (
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={handleUpload}
-                      className="px-4 py-2 bg-vibrant-purple hover:bg-soft-lavender text-white font-semibold rounded-md transition-colors"
-                    >
-                      Upload
-                    </button>
-                  </div>
-                )}
-              </div>
-              <button
-                onClick={handleCreateCampaign}
-                disabled={!newName}
-                className="px-4 py-2 bg-vibrant-purple hover:bg-soft-lavender text-white font-semibold rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Create Campaign
-              </button>
-            </div>
+            </span>
+            <label htmlFor="search" className="text-soft-lavender pl-6">
+              Search players
+            </label>
+          </FloatLabel>
+        </div>
+        <Dropdown
+          value={institution}
+          options={institutionsOptions}
+          onChange={(e) => setInstitution(e.value)}
+          placeholder="Select institution"
+          className="w-full md:w-1/4"
+          showClear
+        />
+      </div>
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold mb-4">Active Campaigns</h2>
+        {active.length > 0 && (
+          <Carousel
+            value={active}
+            itemTemplate={campaignCardTemplate}
+            numVisible={2}
+            numScroll={1}
+            responsiveOptions={[
+              { breakpoint: "1400px", numVisible: 3, numScroll: 1 },
+              { breakpoint: "1024px", numVisible: 2, numScroll: 1 },
+              { breakpoint: "600px", numVisible: 1, numScroll: 1 },
+            ]}
+            className="mb-4"
+            circular
+            showIndicators
+            showNavigators
+          />
+        )}
+        {active.length === 0 && (
+          <div className="col-span-full text-center text-gray-400">
+            No active campaigns.
           </div>
-
-          <div className="mb-6 p-4 border-2 border-soft-lavender rounded-lg">
-            <h3 className="text-xl font-semibold mb-3 text-vibrant-purple">
-              Global Actions
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={handleInitInstitution}
-                className="px-4 py-2 bg-vibrant-purple hover:bg-soft-lavender text-white font-semibold rounded-md transition-colors"
-              >
-                create institition
-              </button>
-              <button
-                onClick={handleClaim}
-                className="px-4 py-2 bg-vibrant-purple hover:bg-soft-lavender text-white font-semibold rounded-md transition-colors"
-              >
-                Claim Earnings
-              </button>
-              <button
-                onClick={handleDisableInst}
-                className="px-4 py-2 bg-vibrant-purple hover:bg-soft-lavender text-white font-semibold rounded-md transition-colors"
-              >
-                Disable Institution
-              </button>
-              <button
-                onClick={handleSetAuth}
-                className="px-4 py-2 bg-vibrant-purple hover:bg-soft-lavender text-white font-semibold rounded-md transition-colors"
-              >
-                Set Authority to Self
-              </button>
-              <button
-                onClick={handleSetFee}
-                className="px-4 py-2 bg-vibrant-purple hover:bg-soft-lavender text-white font-semibold rounded-md transition-colors"
-              >
-                Set Fee (500)
-              </button>
-              <button
-                onClick={handleSubmitContract}
-                className="px-4 py-2 bg-vibrant-purple hover:bg-soft-lavender text-white font-semibold rounded-md transition-colors"
-              >
-                Submit Contract
-              </button>
-              <a
-                href="https://drive.google.com/uc?export=download&id=fileid"
-                download
-              >
-                Download PDF
-              </a>
-            </div>
+        )}
+      </section>
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold mb-4">Upcoming Campaigns</h2>
+        {upcoming.length > 0 && (
+          <Carousel
+            value={upcoming}
+            itemTemplate={campaignCardTemplate}
+            numVisible={4}
+            numScroll={1}
+            responsiveOptions={[
+              { breakpoint: "1400px", numVisible: 3, numScroll: 1 },
+              { breakpoint: "1024px", numVisible: 2, numScroll: 1 },
+              { breakpoint: "600px", numVisible: 1, numScroll: 1 },
+            ]}
+            className="mb-4"
+            circular
+            showIndicators
+            showNavigators
+          />
+        )}
+        {upcoming.length === 0 && (
+          <div className="col-span-full text-center text-gray-400">
+            No upcoming campaigns.
           </div>
-
-          <div className="mb-6 p-4 border-2 border-soft-lavender rounded-lg">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-xl font-semibold text-vibrant-purple">
-                Existing Campaigns
-              </h3>
-              <button
-                onClick={loadCampaigns}
-                className="px-3 py-1 bg-light-green hover:bg-soft-lavender text-deep-navy font-semibold rounded-md transition-colors"
-              >
-                Reload
-              </button>
-            </div>
-            <ul className="space-y-3">
-              {campaigns?.map(({ publicKey, account }) => (
-                <li
-                  key={publicKey.toBase58()}
-                  className="p-3 border border-soft-lavender rounded-md bg-deep-navy bg-opacity-50"
-                >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <strong className="text-light-green">
-                        {account.name}
-                      </strong>
-                      <span className="text-pinterest ml-2">
-                        (Status: {account.status.toString()})
-                      </span>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handlePause(publicKey)}
-                        className="px-3 py-1 bg-soft-lavender hover:bg-vibrant-purple text-deep-navy font-semibold rounded-md transition-colors"
-                      >
-                        Pause
-                      </button>
-                      <button
-                        onClick={() => handleFinish(publicKey)}
-                        className="px-3 py-1 bg-soft-lavender hover:bg-vibrant-purple text-deep-navy font-semibold rounded-md transition-colors"
-                      >
-                        Finish
-                      </button>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
+        )}
+      </section>
+      <section>
+        <h2 className="text-2xl font-semibold mb-4">Past Campaigns</h2>
+        {past.length > 0 && (
+          <Carousel
+            value={past}
+            itemTemplate={campaignCardTemplate}
+            numVisible={4}
+            numScroll={1}
+            responsiveOptions={[
+              { breakpoint: "1400px", numVisible: 3, numScroll: 1 },
+              { breakpoint: "1024px", numVisible: 2, numScroll: 1 },
+              { breakpoint: "600px", numVisible: 1, numScroll: 1 },
+            ]}
+            className="mb-4"
+            circular
+            showIndicators
+            showNavigators
+          />
+        )}
+        {past.length === 0 && (
+          <div className="col-span-full text-center text-gray-400">
+            No past campaigns.
           </div>
-
-          {statusMsg && (
-            <p className="p-3 bg-vibrant-purple bg-opacity-20 border border-vibrant-purple rounded-md text-light-green italic">
-              {statusMsg}
-            </p>
-          )}
-        </>
-      )}
+        )}
+      </section>
+      <CampaignDetailModal
+        visible={modalVisible}
+        onHide={() => setModalVisible(false)}
+        campaign={selectedCampaign}
+      />
+      <Dialog
+        header="Create Campaign"
+        visible={createCampaignModalVisible}
+        style={{ width: "90vw", maxWidth: 600 }}
+        onHide={() => setCreateCampaignModalVisible(false)}
+        modal
+      >
+        {service && (
+          <CampaignForm
+            xutaService={service}
+            uploadService={uploadService}
+            onSuccess={() => {
+              setCreateCampaignModalVisible(false);
+              refreshCampaigns();
+            }}
+            onFail={() => setCreateCampaignModalVisible(false)}
+          />
+        )}
+      </Dialog>
     </div>
   );
 };
+
+export default Campaigns;

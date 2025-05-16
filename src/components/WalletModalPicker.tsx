@@ -39,23 +39,36 @@ const WalletModalPicker: React.FC<{}> = () => {
   return (
     <div className="">
       {connected && (
-        <div className="flex flex-col gap-2">
-          <AnimatedButton
-            text="Disconnect"
-            trigger={() => handleDisconnect()}
+        <div className="flex items-center gap-2 p-2 border-2 border-soft-lavender rounded-lg group relative">
+          <img
+            src={wallet?.adapter.icon}
+            alt={wallet?.adapter.name}
+            className="w-8 h-8"
           />
-
-          <div className="flex items-center gap-2 p-2 border-2 border-soft-lavender rounded-lg">
-            <img
-              src={wallet?.adapter.icon}
-              alt={wallet?.adapter.name}
-              className="w-8 h-8"
-            />
-            <p className="text-white">
-              {publicKey?.toBase58().slice(0, 4)}...
-              {publicKey?.toBase58().slice(-4)}
-            </p>
-          </div>
+          <p className="text-white">
+            {publicKey?.toBase58().slice(0, 4)}...
+            {publicKey?.toBase58().slice(-4)}
+          </p>
+          <button
+            onClick={handleDisconnect}
+            className="ml-2 w-6 h-6 text-soft-lavender hover:text-white transition-colors"
+            title="Disconnect wallet"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-full w-full"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="white"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
+            </svg>
+          </button>
         </div>
       )}
       {!connected && (
@@ -116,11 +129,13 @@ const WalletModalPicker: React.FC<{}> = () => {
                     >
                       <span className="absolute top-0 left-0 w-0 h-full bg-soft-lavender transition-all duration-300 ease-out group-hover:w-full -z-10"></span>
                       <img
-                        className="w-8 h-8 transition-transform duration-300 group-hover:scale-110"
+                        className="transition-transform duration-300 group-hover:scale-110"
                         src={wallet.adapter.icon}
                         alt={wallet.adapter.name}
+                        width={32}
+                        height={32}
                       />
-                      <span className="text-soft-lavender text-lg transition-all duration-300 group-hover:!text-white group-hover:text-xl group-hover:translate-x-2 group-hover:font-bold">
+                      <span className="text-soft-lavender flex flex-1 text-lg transition-all duration-300 group-hover:!text-white group-hover:text-xl group-hover:translate-x-2 group-hover:font-bold">
                         {wallet.adapter.name}
                       </span>
                     </button>
