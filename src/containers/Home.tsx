@@ -1,22 +1,23 @@
 import React, { useState } from "react";
 
 import "@solana/wallet-adapter-react-ui/styles.css";
-import { WalletName } from "@solana/wallet-adapter-base";
 import WalletModalPicker from "../components/WalletModalPicker";
 import { Link } from "react-router-dom";
 import { Button } from "primereact/button";
 
 export const Home: React.FC = () => {
-  const [walletModalOpen, setWalletModalOpen] = useState(false);
-  const [selectedWallet, setSelectedWallet] = useState<WalletName | null>(null);
-
   return (
     <div className="bg-[var(--deep-navy)] text-white">
       <header className="bg-[var(--vibrant-purple)]">
         <nav className="container mx-auto flex items-center justify-between py-4 px-6">
-          <a href="#" className="text-2xl font-bold">
-            Xuta
-          </a>
+          <div>
+            <img
+              src="/src/images/xuta.jpeg"
+              alt="Xuta"
+              className="w-[100px] h-[100px] rounded-full"
+            />
+          </div>
+
           <ul className="flex space-x-6">
             <li>
               <a
@@ -75,12 +76,32 @@ export const Home: React.FC = () => {
           </div>
           {/* Right: Football Player Silhouette */}
           <div className="flex justify-center md:justify-end mt-8 md:mt-0">
-            <img
-              src="https://upload.wikimedia.org/wikipedia/commons/8/8e/Football_player_silhouette.png"
-              alt="Football player silhouette"
-              className="max-w-xs w-full h-auto opacity-90 drop-shadow-2xl glow-crypto"
-              style={{ filter: "grayscale(1)" }}
-            />
+            <svg
+              fill="var(--light-green)"
+              height="200px"
+              width="200px"
+              version="1.1"
+              id="Capa_1"
+              xmlns="http://www.w3.org/2000/svg"
+              xmlnsXlink="http://www.w3.org/1999/xlink"
+              viewBox="0 0 290 290"
+              xmlSpace="preserve"
+              className="neon-crypto"
+            >
+              <path
+                colorRendering="auto"
+                imageRendering="auto"
+                shapeRendering="auto"
+                colorInterpolation="sRGB"
+                d="M45,0
+	c-2.761,0-5,2.239-5,5v280c0,2.761,2.239,5,5,5h200c2.761,0,5-2.239,5-5V5c0-2.761-2.239-5-5-5L45,0L45,0z M50,10h50v15
+	c0,2.761,2.239,5,5,5h80c2.761,0,5-2.239,5-5V10h50v129.963h-50.285c-2.5-22.452-21.612-40-44.715-40
+	c-23.103,0-42.213,17.548-44.713,40H50V10z M110,10h70v10h-70V10z M145,109.963c17.69,0,32.229,12.997,34.643,30h-69.283
+	C112.773,122.96,127.31,109.963,145,109.963z M50,149.963h50.287c2.5,22.453,21.61,40,44.713,40s42.215-17.547,44.715-40H240V280
+	h-50v-15c0-2.761-2.239-5-5-5h-80c-2.761,0-5,2.239-5,5v15H50V149.963L50,149.963z M110.359,149.963h69.283
+	c-2.413,17.003-16.952,30-34.643,30C127.31,179.963,112.773,166.966,110.359,149.963z M110,270h70v10h-70C110,280,110,270,110,270z"
+              />
+            </svg>
           </div>
         </div>
       </section>

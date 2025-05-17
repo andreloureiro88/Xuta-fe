@@ -15,7 +15,11 @@ import {
   createInitializeMintInstruction,
   getMinimumBalanceForRentExemptMint,
   MINT_SIZE,
+  mintTo,
+  getOrCreateAssociatedTokenAccount,
+  getAssociatedTokenAddress,
 } from "@solana/spl-token";
+import { getOrCreateATAWithWallet } from "../helpers/ata";
 
 export class XutaService {
   private program: Program<Idl>;
@@ -256,12 +260,11 @@ export class XutaService {
     ).then(([address]) => address);
   }
 
-  async buyToken(
-    amount: number,
-    campaignPda: PublicKey,
-    mintQuote: PublicKey,
-    userQuoteAta: PublicKey
-  ) {
+  async buyToken(amount: number, campaignPda: PublicKey, user: PublicKey) {
+    const mintQuote = new PublicKey(
+      "7ibogEL4YokK34GBe8iKXxUxU1KaTcignu31gz9g6Py9"
+    );
+
     const [receiptPda] = PublicKey.findProgramAddressSync(
       [
         Buffer.from("receipt"),
@@ -276,6 +279,14 @@ export class XutaService {
       this.program.programId
     );
 
+    // Get or create the user's quote token account
+    const userQuoteAta = await getOrCreateATAWithWallet(
+      this.provider.connection,
+      this.provider.wallet.publicKey,
+      mintQuote,
+      this.provider.wallet.signTransaction
+    );
+
     return await this.program.methods
       .buyToken(new BN(amount), 0) // receiptBump will be calculated by the program
       .accounts({
@@ -284,11 +295,9 @@ export class XutaService {
         campaign: campaignPda,
         vaultQuote: vaultQuotePda,
         receipt: receiptPda,
-        userQuoteAta,
-        tokenProgram: new PublicKey(
-          "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        ),
-        systemProgram: new PublicKey("11111111111111111111111111111111"),
+        userQuoteAta: userQuoteAta,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
       })
       .rpc();
   }

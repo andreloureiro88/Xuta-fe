@@ -6,7 +6,7 @@ import { Button } from "primereact/button";
 import CampaignCard from "../components/CampaignCard";
 import CampaignDetailModal from "../components/CampaignDetailModal";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { Connection } from "@solana/web3.js";
+import { Connection, PublicKey } from "@solana/web3.js";
 import { AnchorProvider } from "@coral-xyz/anchor";
 import Campaign from "../models/Campaign";
 import { FloatLabel } from "primereact/floatlabel";
@@ -16,6 +16,7 @@ import UploadService from "../services/UploadService";
 import WalletModalPicker from "../components/WalletModalPicker";
 import Institution from "../models/Institution";
 import { Carousel } from "primereact/carousel";
+import { useNavigate } from "react-router-dom";
 
 // Dummy types, replace with your actual campaign type
 
@@ -43,6 +44,7 @@ export const Campaigns: React.FC = () => {
   const wallet = useWallet();
   const [createCampaignModalVisible, setCreateCampaignModalVisible] =
     useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (wallet.publicKey && wallet.signTransaction) {
@@ -121,6 +123,12 @@ export const Campaigns: React.FC = () => {
   const upcoming = filtered.filter((c) => categorizeCampaign(c) === "Upcoming");
   const past = filtered.filter((c) => categorizeCampaign(c) === "Past");
 
+  const carouselSettings = [
+    { breakpoint: "1400px", numVisible: 4, numScroll: 1 },
+    { breakpoint: "1024px", numVisible: 3, numScroll: 1 },
+    { breakpoint: "600px", numVisible: 1, numScroll: 1 },
+  ];
+
   const handleCardAction = (campaign: Campaign) => {
     setSelectedCampaign(campaign);
     setModalVisible(true);
@@ -142,7 +150,13 @@ export const Campaigns: React.FC = () => {
         key={c.account.authority}
         id={c.account.authority}
         name={c.account.name}
-        institutionName={c.account.institutionName}
+        institutionName={
+          institutions.find(
+            (inst) =>
+              inst.account.authority?.toString() ===
+              c.account.authority?.toString()
+          )?.account.name || "Unknown"
+        }
         description={c.account.description}
         image={c.account.image}
         contract={c.account.contract}
@@ -157,9 +171,20 @@ export const Campaigns: React.FC = () => {
   return (
     <div className="mx-[16rem] mt-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-4xl font-bold text-center flex-1">
-          Campaign Gallery
-        </h1>
+        <div className="flex items-center gap-4">
+          <Button
+            icon="pi pi-home"
+            rounded
+            text
+            severity="secondary"
+            onClick={() => navigate("/")}
+            tooltip="Go to Home"
+            tooltipOptions={{ position: "bottom" }}
+          />
+          <h1 className="text-4xl font-bold text-center flex-1">
+            Campaign Gallery
+          </h1>
+        </div>
         <div className="flex items-center gap-4">
           <Button
             label="Create Campaign"
@@ -202,13 +227,9 @@ export const Campaigns: React.FC = () => {
           <Carousel
             value={active}
             itemTemplate={campaignCardTemplate}
-            numVisible={2}
+            numVisible={3}
             numScroll={1}
-            responsiveOptions={[
-              { breakpoint: "1400px", numVisible: 3, numScroll: 1 },
-              { breakpoint: "1024px", numVisible: 2, numScroll: 1 },
-              { breakpoint: "600px", numVisible: 1, numScroll: 1 },
-            ]}
+            responsiveOptions={carouselSettings}
             className="mb-4"
             circular
             showIndicators
@@ -227,13 +248,9 @@ export const Campaigns: React.FC = () => {
           <Carousel
             value={upcoming}
             itemTemplate={campaignCardTemplate}
-            numVisible={4}
+            numVisible={3}
             numScroll={1}
-            responsiveOptions={[
-              { breakpoint: "1400px", numVisible: 3, numScroll: 1 },
-              { breakpoint: "1024px", numVisible: 2, numScroll: 1 },
-              { breakpoint: "600px", numVisible: 1, numScroll: 1 },
-            ]}
+            responsiveOptions={carouselSettings}
             className="mb-4"
             circular
             showIndicators
@@ -252,13 +269,9 @@ export const Campaigns: React.FC = () => {
           <Carousel
             value={past}
             itemTemplate={campaignCardTemplate}
-            numVisible={4}
+            numVisible={3}
             numScroll={1}
-            responsiveOptions={[
-              { breakpoint: "1400px", numVisible: 3, numScroll: 1 },
-              { breakpoint: "1024px", numVisible: 2, numScroll: 1 },
-              { breakpoint: "600px", numVisible: 1, numScroll: 1 },
-            ]}
+            responsiveOptions={carouselSettings}
             className="mb-4"
             circular
             showIndicators
@@ -279,7 +292,7 @@ export const Campaigns: React.FC = () => {
       <Dialog
         header="Create Campaign"
         visible={createCampaignModalVisible}
-        style={{ width: "90vw", maxWidth: 600 }}
+        style={{ width: "95vw", maxWidth: 800 }}
         onHide={() => setCreateCampaignModalVisible(false)}
         modal
       >

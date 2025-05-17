@@ -107,6 +107,16 @@ body {
   background-color: $soft-lavender; /* soft lavender */
 }
 
+.p-component,
+.p-button,
+.p-inputtext,
+.p-dropdown,
+.p-dialog,
+.p-card,
+.p-carousel {
+  font-family: "Orbitron", "sans-serif" !important;
+}
+
 @layer utilities {
   .animate-gradient-move {
     background-size: 200% 200%;

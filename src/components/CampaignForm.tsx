@@ -18,6 +18,7 @@ import { FloatLabel } from "primereact/floatlabel";
 import { Button } from "primereact/button";
 import { InputNumber } from "primereact/inputnumber";
 import Institution from "../models/Institution";
+import { Calendar } from "primereact/calendar";
 
 interface CampaignForm {
   name: string;
@@ -49,6 +50,11 @@ interface CampaignFormProps {
   onSuccess?: () => void;
   onFail?: (error: Error) => void;
 }
+
+// Add this type for the Calendar event
+type CalendarChangeEvent = {
+  value: Date | null | undefined;
+};
 
 export const CampaignForm: React.FC<CampaignFormProps> = ({
   xutaService,
@@ -137,6 +143,13 @@ export const CampaignForm: React.FC<CampaignFormProps> = ({
     setForm((prev) => ({
       ...prev,
       contract: files ? files[0] : null,
+    }));
+  };
+
+  const handleDateChange = (field: string, value: Date | null) => {
+    setForm((prev) => ({
+      ...prev,
+      [field]: value ? Math.floor(value.getTime() / 1000) : null,
     }));
   };
 
@@ -338,17 +351,21 @@ export const CampaignForm: React.FC<CampaignFormProps> = ({
         <div className="grid grid-cols-2 gap-4">
           <div>
             <FloatLabel>
-              <InputNumber
+              <Calendar
                 id="initialDate"
-                value={form.initialDate}
-                onValueChange={(e) =>
-                  handleNumberChange("initialDate", e.value ?? null)
+                value={
+                  form.initialDate ? new Date(form.initialDate * 1000) : null
+                }
+                onChange={(e: CalendarChangeEvent) =>
+                  handleDateChange("initialDate", e.value ?? null)
                 }
                 className="w-full"
-                minFractionDigits={0}
-                maxFractionDigits={0}
+                showTime
+                showSeconds
+                dateFormat="dd/mm/yy"
+                showIcon
               />
-              <label htmlFor="initialDate">Initial Date (Unix Timestamp)</label>
+              <label htmlFor="initialDate">Initial Date</label>
             </FloatLabel>
             {errors.initialDate && (
               <small className="p-error block mt-1">{errors.initialDate}</small>
@@ -357,17 +374,19 @@ export const CampaignForm: React.FC<CampaignFormProps> = ({
 
           <div>
             <FloatLabel>
-              <InputNumber
+              <Calendar
                 id="dueDate"
-                value={form.dueDate}
-                onValueChange={(e) =>
-                  handleNumberChange("dueDate", e.value ?? null)
+                value={form.dueDate ? new Date(form.dueDate * 1000) : null}
+                onChange={(e: CalendarChangeEvent) =>
+                  handleDateChange("dueDate", e.value ?? null)
                 }
                 className="w-full"
-                minFractionDigits={0}
-                maxFractionDigits={0}
+                showTime
+                showSeconds
+                dateFormat="dd/mm/yy"
+                showIcon
               />
-              <label htmlFor="dueDate">Due Date (Unix Timestamp)</label>
+              <label htmlFor="dueDate">Due Date</label>
             </FloatLabel>
             {errors.dueDate && (
               <small className="p-error block mt-1">{errors.dueDate}</small>

@@ -13,6 +13,7 @@ import { Dialog } from "primereact/dialog";
 import { Tag } from "primereact/tag";
 import { Image } from "primereact/image";
 import Institution from "../models/Institution";
+import { useNavigate } from "react-router-dom";
 
 export const Institutions: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -24,6 +25,7 @@ export const Institutions: React.FC = () => {
     null
   );
   const wallet = useWallet();
+  const navigate = useNavigate();
 
   const fetchConfig = async () => {
     const config = await service?.getConfig();
@@ -49,6 +51,7 @@ export const Institutions: React.FC = () => {
       const connection = new Connection("http://localhost:8899", "confirmed");
       const provider = new AnchorProvider(connection, wallet as any, {
         commitment: "confirmed",
+        preflightCommitment: "confirmed",
       });
       const xutaService = new XutaService(provider);
       setService(xutaService);
@@ -74,10 +77,21 @@ export const Institutions: React.FC = () => {
   return (
     <div className="container mx-auto px-4 pt-6 pb-2">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-3xl font-bold text-soft-lavender flex items-center">
-          <i className="pi pi-building mr-2"></i>
-          Institutions
-        </h1>
+        <div className="flex items-center gap-4">
+          <Button
+            icon="pi pi-home"
+            rounded
+            text
+            severity="secondary"
+            onClick={() => navigate("/")}
+            tooltip="Go to Home"
+            tooltipOptions={{ position: "bottom" }}
+          />
+          <h1 className="text-3xl font-bold text-soft-lavender flex items-center">
+            <i className="pi pi-building mr-2"></i>
+            Institutions
+          </h1>
+        </div>
         <div className="flex gap-2">
           {wallet.connected && (
             <>
