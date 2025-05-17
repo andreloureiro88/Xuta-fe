@@ -37,8 +37,6 @@ export const Institutions: React.FC = () => {
     if (service) {
       try {
         const insts = await service.getInstituttions();
-
-        console.log("insts", insts);
         setInstitutions(insts);
       } catch (error) {
         console.error("Error fetching institutions:", error);

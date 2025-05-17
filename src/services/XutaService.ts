@@ -28,14 +28,9 @@ export class XutaService {
   constructor(provider: AnchorProvider) {
     this.provider = provider;
 
-    // Add more detailed logging
-    console.log("Program ID from IDL:", XutaIDL.address);
-    console.log("Provider connection:", provider.connection.rpcEndpoint);
-    console.log("Provider wallet:", provider.wallet.publicKey.toString());
-
     // Use the IDL directly with type assertion
     this.program = new Program(XutaIDL as XutaSc, provider);
-    console.log(this.program);
+
     // Log the program instance
     console.log(
       "Program instance created with ID:",
@@ -96,12 +91,6 @@ export class XutaService {
       this.program.programId
     )[0];
 
-    console.log(
-      "Initializing program with authority:",
-      this.provider.wallet.publicKey.toString()
-    );
-    console.log("Config PDA:", configPda.toString());
-
     return await this.program.methods
       .init()
       .accounts({
@@ -115,7 +104,6 @@ export class XutaService {
   // Campaign Methods
 
   async getAllCampaigns() {
-    console.log("acc", this.program.account);
     return this.program.account.campaign.all();
   }
 
@@ -174,11 +162,7 @@ export class XutaService {
       // Generate and initialize mint accounts
       const mintPlayerKey = Keypair.generate();
 
-      console.log("Initializing mint accounts...");
-
-      const mintQuote = new PublicKey(
-        "7ibogEL4YokK34GBe8iKXxUxU1KaTcignu31gz9g6Py9"
-      );
+      const mintQuote = new PublicKey(import.meta.env.VITE_ADMIN_KEY);
 
       // Derive PDAs
       const [campaignPda] = PublicKey.findProgramAddressSync(
@@ -261,9 +245,7 @@ export class XutaService {
   }
 
   async buyToken(amount: number, campaignPda: PublicKey, user: PublicKey) {
-    const mintQuote = new PublicKey(
-      "7ibogEL4YokK34GBe8iKXxUxU1KaTcignu31gz9g6Py9"
-    );
+    const mintQuote = new PublicKey(import.meta.env.VITE_ADMIN_KEY);
 
     const [receiptPda] = PublicKey.findProgramAddressSync(
       [

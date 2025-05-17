@@ -62,25 +62,9 @@ export const Campaigns: React.FC = () => {
 
     service?.getInstituttions().then((data: Institution[]) => {
       setInstitutions(data);
-      data.forEach((inst) => {
-        console.log("Institution Public Key:", inst.publicKey.toString());
-        console.log(
-          "Institution Authority:",
-          inst.account.authority.toString()
-        );
-      });
     });
 
     service?.getAllCampaigns().then((data: Campaign[]) => {
-      console.log(data);
-
-      data.forEach((campaign) => {
-        console.log("Campaign Public Key:", campaign.publicKey.toString());
-        console.log(
-          "Campaign Authority:",
-          campaign.account.authority.toString()
-        );
-      });
       setCampaigns(data);
       setLoading(false);
     });
@@ -98,8 +82,6 @@ export const Campaigns: React.FC = () => {
 
   // Filter campaigns
   const filtered = useMemo(() => {
-    console.log("institutions", institutions);
-    console.log("institution 2", institution?.toString());
     const selectedInstitution = institutions.find(
       (inst) => inst.account?.authority?.toString() === institution?.toString()
     );
@@ -107,8 +89,7 @@ export const Campaigns: React.FC = () => {
       const matchesName = c.account.name
         .toLowerCase()
         .includes(search.toLowerCase());
-      console.log("c.account.authority", c.account.authority);
-      console.log("institution", selectedInstitution);
+
       const matchesInstitution =
         !selectedInstitution ||
         c.account.authority?.toString() ===
