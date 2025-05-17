@@ -199,6 +199,7 @@ export const CampaignForm: React.FC<CampaignFormProps> = ({
         accept="image/*"
         onChange={handleImage}
         className="hidden"
+        autoComplete="off"
         onClick={(e) => {
           e.stopPropagation();
         }}
@@ -210,6 +211,7 @@ export const CampaignForm: React.FC<CampaignFormProps> = ({
         accept="application/pdf"
         onChange={handleContract}
         className="hidden"
+        autoComplete="off"
         onClick={(e) => {
           e.stopPropagation();
         }}
@@ -218,6 +220,7 @@ export const CampaignForm: React.FC<CampaignFormProps> = ({
         ref={formRef}
         onSubmit={handleSubmit}
         className="flex flex-col gap-6"
+        autoComplete="off"
       >
         <div>
           <div className="flex items-center gap-2">
@@ -262,6 +265,7 @@ export const CampaignForm: React.FC<CampaignFormProps> = ({
               value={form.name}
               onChange={handleChange}
               className="w-full"
+              autoComplete="off"
             />
             <label htmlFor="name">Campaign Name</label>
           </FloatLabel>
@@ -278,6 +282,7 @@ export const CampaignForm: React.FC<CampaignFormProps> = ({
               value={form.institutionName}
               onChange={handleChange}
               className="w-full"
+              autoComplete="off"
             />
             <label htmlFor="institutionName">Institution Name</label>
           </FloatLabel>
@@ -298,6 +303,7 @@ export const CampaignForm: React.FC<CampaignFormProps> = ({
               rows={4}
               className="w-full"
               placeholder="Enter campaign description..."
+              autoComplete="off"
             />
             <label htmlFor="description">Description</label>
           </FloatLabel>

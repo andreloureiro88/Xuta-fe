@@ -136,6 +136,7 @@ export const Institutions: React.FC = () => {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-6"
+                    autoComplete="off"
                   />
                 </span>
                 <label htmlFor="search" className="text-soft-lavender pl-6">
@@ -159,15 +160,6 @@ export const Institutions: React.FC = () => {
                     preview
                     width="100%"
                     zoomSrc={`${institution.account.image}`}
-                  />
-
-                  <Tag
-                    value={institution.account.isActive ? "Active" : "Inactive"}
-                    severity={
-                      institution.account.isActive ? "success" : "danger"
-                    }
-                    className="absolute top-2 right-2"
-                    rounded
                   />
                 </div>
 
